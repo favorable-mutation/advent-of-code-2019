@@ -1,6 +1,6 @@
 module Main where
 
-import AocLib ( someFunc )
+import AocLib ( parseChallengeInput )
 
 main :: IO ()
-main = someFunc
+main = parseChallengeInput
