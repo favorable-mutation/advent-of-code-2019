@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - hspec
 - hlint
+- split
 
 library:
   source-dirs: src
