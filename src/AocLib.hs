@@ -7,7 +7,7 @@ import Data.List.Split
 
 parseChallengeInput :: IO ()
 parseChallengeInput = do
-  let date = 2
+  let date = 3
   let part = 1
   let inputFile = "input/" ++ show date ++ ".txt"
   fileContent <- readFile inputFile
@@ -76,7 +76,10 @@ iterateInputs :: [Int] -> Int
 iterateInputs ints = 100 * noun + verb
   where query = 19690720
         range = [0..99]
-        (noun, verb, _) = head (filter (\ (_, _, result) -> result == query) (enumerateNouns range ints))
+        (noun, verb, _) =
+          head (filter
+                 (\ (_, _, result) -> result == query)
+                 (enumerateNouns range ints))
 
 enumerateNouns :: [Int] -> [Int] -> [(Int, Int, Int)]
 enumerateNouns range ints = concatMap (enumerateVerbs range ints) range
@@ -85,7 +88,11 @@ enumerateVerbs :: [Int] -> [Int] -> Int -> [(Int, Int, Int)]
 enumerateVerbs range ints noun = map (trySentence ints noun) range
 
 trySentence :: [Int] -> Int -> Int -> (Int, Int, Int)
-trySentence ints noun verb = (noun, verb, head (parseIntcode (replaceParams noun verb ints)))
+trySentence ints noun verb = (
+  noun,
+  verb,
+  head (parseIntcode (replaceParams noun verb ints))
+  )
 
 replaceParams :: Int -> Int -> [Int] -> [Int]
 replaceParams x1 x2 ints = replaceAt x2 2 (replaceAt x1 1 ints)
@@ -132,3 +139,59 @@ dayThree part coordStrings
 
 crossWires :: [[(Char, Int)]] -> Int
 crossWires _ = 0
+
+-- getCrosses :: [(Int, Int)] -> [(Int, Int)] -> [(Int, Int)]
+
+mapPath :: [(Char, Int)] -> [(Int, Int)]
+mapPath = movePosns start
+  where start = (0, 0)
+
+movePosns :: (Int, Int) -> [(Char, Int)] -> [(Int, Int)]
+movePosns _ [] = []
+movePosns start motions = nextPosn : movePosns nextPosn (tail motions)
+  where nextPosn = getMoveFunc (head motions) start
+
+getMoveFunc :: (Char, Int) -> ((Int, Int) -> (Int, Int))
+getMoveFunc motion
+  | fst motion == 'U' = \ (x, y) -> (x, y + snd motion)
+  | fst motion == 'D' = \ (x, y) -> (x, y - snd motion)
+  | fst motion == 'R' = \ (x, y) -> (x + snd motion, y)
+  | fst motion == 'L' = \ (x, y) -> (x - snd motion, y)
+
+manhattanDistance :: (Int, Int) -> (Int, Int) -> Int
+manhattanDistance (x1, y1) (x2, y2) =
+  abs (x1 - x2) + abs (y1 - y2)
+
+-- getIntersection ::
+
+haveIntersection :: ((Int, Int), (Int, Int))
+                 -> ((Int, Int), (Int, Int))
+                 -> Bool
+haveIntersection segment1 segment2
+  | rightUp segment1 segment2 =
+    perpendiction x1 x2 x4 && perpendiction y2 y1 y3
+  | rightUp segment2 segment1 =
+    perpendiction x2 x1 x3 && perpendiction y1 y2 y4
+  | parallel segment1 segment2 = False
+  where
+    ((x1, y1), (x3, y3)) = segment1
+    ((x2, y2), (x4, y4)) = segment2
+
+rightUp :: ((Int, Int), (Int, Int))
+        -> ((Int, Int), (Int, Int))
+        -> Bool
+rightUp segment1 segment2 =
+  horizontal segment1 && not (horizontal segment2)
+
+perpendiction :: Int -> Int -> Int -> Bool
+perpendiction point low high = point `elem` [low..high]
+
+parallel :: ((Int, Int), (Int, Int))
+         -> ((Int, Int), (Int, Int))
+         -> Bool
+parallel segment1 segment2 =
+  (horizontal segment1 && horizontal segment2)
+  || not (horizontal segment1 || horizontal segment2)
+
+horizontal :: ((Int, Int), (Int, Int)) -> Bool
+horizontal ((x1, y1), (x2, y2)) = x1 == x2
